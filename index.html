@@ -263,6 +263,32 @@
   .cat-tile.c6{ background:linear-gradient(135deg,#15803D,#84CC16); box-shadow:0 0 0 rgba(132,204,22,0); }
   .cat-tile.c6:hover{ box-shadow:0 10px 26px -8px rgba(132,204,22,0.55); }
 
+  /* ---------------- Category detail page ---------------- */
+  .category-page-head{
+    display:flex; align-items:center; gap:16px; margin-bottom:28px;
+  }
+  .cat-back-btn{
+    width:38px; height:38px; border-radius:50%; background:var(--panel);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text); flex-shrink:0;
+  }
+  .cat-back-btn:hover{ background:var(--panel-2); }
+  .cat-back-btn svg{ width:18px; height:18px; }
+  .category-page-icon{
+    width:56px; height:56px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .category-page-icon svg{ width:26px; height:26px; }
+  .category-page-title h1{ font-size:24px; font-weight:800; letter-spacing:-0.4px; }
+  .category-page-title p{ font-size:12.5px; color:var(--muted); margin-top:3px; }
+
+  .track-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr));
+    gap:22px 18px;
+  }
+  .track-grid .feat-card{ flex:none; }
+  .track-grid .feat-art{ width:100%; height:auto; aspect-ratio:1/1; }
+
   /* ---------------- Recently played list ---------------- */
   .recent-scroll{ display:flex; gap:14px; overflow-x:auto; scrollbar-width:none; }
   .recent-scroll::-webkit-scrollbar{ display:none; }
@@ -554,38 +580,58 @@
 
     <main class="content" id="top">
 
-      <!-- HERO -->
-      <section class="hero" id="hero-banner">
-        <div class="hero-bg active" id="hero-bg-a"></div>
-        <div class="hero-bg" id="hero-bg-b"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
+      <!-- ============ HOME VIEW ============ -->
+      <div id="home-view">
+
+        <!-- HERO -->
+        <section class="hero" id="hero-banner">
+          <div class="hero-bg active" id="hero-bg-a"></div>
+          <div class="hero-bg" id="hero-bg-b"></div>
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+          </div>
+          <div class="hero-dots"><span class="on"></span><span></span><span></span><span></span></div>
+        </section>
+
+        <!-- FEATURED -->
+        <section class="section" id="featured">
+          <div class="section-head"><h2>Featured for you</h2><a data-scroll="categories">View all</a></div>
+          <div class="card-scroll" id="featured-scroll"></div>
+        </section>
+
+        <!-- CATEGORIES -->
+        <section class="section" id="categories">
+          <div class="section-head"><h2>Browse by category</h2></div>
+          <div class="cat-grid" id="category-grid"></div>
+        </section>
+
+        <!-- RECENTLY PLAYED -->
+        <section class="section" id="recent">
+          <div class="section-head"><h2>Recently played</h2></div>
+          <div class="recent-scroll" id="recent-scroll">
+            <div class="empty-note">Nothing played yet — pick a track to get started.</div>
+          </div>
+        </section>
+
+        <!-- FULL CATEGORY ROWS -->
+        <div id="category-rows"></div>
+
+      </div>
+
+      <!-- ============ CATEGORY DETAIL PAGE ============ -->
+      <div id="category-view" style="display:none;">
+        <div class="category-page-head">
+          <div class="cat-back-btn" id="category-back-btn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="category-page-icon" id="category-page-icon"></div>
+          <div class="category-page-title">
+            <h1 id="category-page-name">Category</h1>
+            <p id="category-page-count">0 tracks</p>
+          </div>
         </div>
-        <div class="hero-dots"><span class="on"></span><span></span><span></span><span></span></div>
-      </section>
-
-      <!-- FEATURED -->
-      <section class="section" id="featured">
-        <div class="section-head"><h2>Featured for you</h2><a data-scroll="categories">View all</a></div>
-        <div class="card-scroll" id="featured-scroll"></div>
-      </section>
-
-      <!-- CATEGORIES -->
-      <section class="section" id="categories">
-        <div class="section-head"><h2>Browse by category</h2></div>
-        <div class="cat-grid" id="category-grid"></div>
-      </section>
-
-      <!-- RECENTLY PLAYED -->
-      <section class="section" id="recent">
-        <div class="section-head"><h2>Recently played</h2></div>
-        <div class="recent-scroll" id="recent-scroll">
-          <div class="empty-note">Nothing played yet — pick a track to get started.</div>
-        </div>
-      </section>
-
-      <!-- FULL CATEGORY ROWS -->
-      <div id="category-rows"></div>
+        <div class="track-grid" id="category-page-grid"></div>
+      </div>
 
     </main>
   </div>
@@ -910,16 +956,14 @@ document.querySelectorAll('.modal-backdrop').forEach(bd=> bd.addEventListener('c
 // ---------- Nav scroll ----------
 document.querySelectorAll('[data-scroll]').forEach(el=>{
   el.addEventListener('click', ()=>{
+    closeCategoryPage();
     const id = el.dataset.scroll;
     const target = document.getElementById(id);
     if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
   });
 });
 document.querySelectorAll('[data-cat]').forEach(el=>{
-  el.addEventListener('click', ()=>{
-    const target = document.getElementById('cat-row-' + el.dataset.cat);
-    if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-  });
+  el.addEventListener('click', ()=> openCategoryPage(el.dataset.cat));
 });
 document.querySelector('[data-open-search]')?.addEventListener('click', ()=> document.getElementById('search-input').focus());
 
@@ -1317,12 +1361,50 @@ function renderCategoryGrid(){
     </div>
   `).join('');
   grid.querySelectorAll('.cat-tile').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const target = document.getElementById('cat-row-' + el.dataset.cat);
-      if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-    });
+    el.addEventListener('click', ()=> openCategoryPage(el.dataset.cat));
   });
 }
+
+// ---------- Category detail page ----------
+let openCategoryKey = null;
+
+function renderCategoryPageGrid(){
+  if(!openCategoryKey) return;
+  const cat = CATEGORIES.find(c => c.key === openCategoryKey);
+  if(!cat) return;
+  const tracks = tracksByCategory[openCategoryKey] || [];
+  document.getElementById('category-page-count').textContent =
+    tracks.length === 1 ? '1 track' : `${tracks.length} tracks`;
+  const grid = document.getElementById('category-page-grid');
+  grid.innerHTML = tracks.length
+    ? tracks.map(trackCardHTML).join('')
+    : `<div class="empty-note">Nothing here yet — upload one to get started.</div>`;
+  grid.querySelectorAll('[data-track]').forEach(el=>{
+    el.addEventListener('click', ()=> playFromQueue(tracks, el.dataset.track));
+  });
+}
+
+function openCategoryPage(key){
+  const cat = CATEGORIES.find(c => c.key === key);
+  if(!cat) return;
+  openCategoryKey = key;
+  document.getElementById('category-page-name').textContent = cat.label;
+  document.getElementById('category-page-icon').className = 'category-page-icon ' + cat.tile;
+  document.getElementById('category-page-icon').innerHTML =
+    `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8">${cat.icon}</svg>`;
+  renderCategoryPageGrid();
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('category-view').style.display = 'block';
+  document.getElementById('top').scrollIntoView({ behavior:'auto', block:'start' });
+}
+
+function closeCategoryPage(){
+  openCategoryKey = null;
+  document.getElementById('category-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'block';
+}
+
+document.getElementById('category-back-btn').addEventListener('click', closeCategoryPage);
 
 function trackCardHTML(t){
   return `
@@ -1428,6 +1510,7 @@ async function loadTracks(){
   renderFeatured();
   renderCategoryRows();
   renderRecent();
+  renderCategoryPageGrid();
   renderSuggested();
 }
 
