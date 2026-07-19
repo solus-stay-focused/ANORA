@@ -792,18 +792,19 @@
 // 3. Firestore Database → create database → add rules so each user can only
 //    read/write their own doc, e.g.:
 //      match /users/{uid} { allow read, write: if request.auth.uid == uid; }
-// 4. Track submissions are now open to any signed-in user (not just
-//    ADMIN_EMAILS) — Firestore rules must allow this or writes will be
-//    rejected client-side-looking-fine-but-failing. Something like:
+// 4. Track submissions publish immediately for any signed-in user —
+//    there is no approval gate. Firestore rules must allow this or
+//    writes will be rejected client-side-looking-fine-but-failing:
 //      match /tracks/{id} {
 //        allow read: if true;
 //        allow create: if request.auth != null
 //          && request.resource.data.addedBy == request.auth.token.email
-//          && request.resource.data.approved == (request.auth.token.email in ["you@example.com"]);
+//          && request.resource.data.approved == true;
 //        allow update, delete: if request.auth != null
 //          && request.auth.token.email in ["you@example.com"];
 //      }
-//    Adjust the admin email list in that rule to match ADMIN_EMAILS below.
+//    (update/delete still admin-only, for cleanup/removal — adjust
+//    that email list to match ADMIN_EMAILS below.)
 const firebaseConfig = {
   apiKey: "AIzaSyBB8QrSBR43pQVQeH0SmhVytE9nbsusYkE",
   authDomain: "anora-89b5d.firebaseapp.com",
@@ -1183,9 +1184,8 @@ document.getElementById('add-track-btn').addEventListener('click', ()=>{
   document.getElementById('add-status').textContent = "";
   pendingPreview = null;
   setAddTab('youtube');
-  document.getElementById('add-modal-sub').textContent = isAdmin
-    ? "Paste a YouTube URL or upload an audio file — title and artwork are pulled automatically for YouTube links."
-    : "Paste a YouTube URL or upload an audio file. Your submission is reviewed before it appears in the library.";
+  document.getElementById('add-modal-sub').textContent =
+    "Paste a YouTube URL or upload an audio file — it goes live immediately.";
   openModal('add-modal');
 });
 
@@ -1228,7 +1228,7 @@ document.getElementById('up-file-input').addEventListener('change', (e)=>{
 
 function saveTrackDoc(data){
   return db.collection('tracks').add({
-    ...data, approved: isAdmin, addedBy: auth.currentUser.email,
+    ...data, approved: true, addedBy: auth.currentUser.email,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 }
@@ -1291,15 +1291,15 @@ document.getElementById('add-submit').addEventListener('click', async ()=>{
 
   try{
     // Anyone signed in can submit a track (YouTube link or an uploaded
-    // audio file). Admin submissions go live immediately; everyone
-    // else's are saved with approved:false so they're held for review
-    // before loadTracks() (which only reads approved==true) will ever
-    // surface them. Build an admin review view against tracks where
-    // approved==false when you're ready to moderate the queue.
+    // audio file), and it publishes immediately with no review step.
+    // There is no moderation queue — if abuse becomes a problem, the
+    // fix is to flip saveTrackDoc() back to approved:isAdmin (see git
+    // history / earlier version of this comment) and build a review
+    // screen against tracks where approved==false.
     const ok = addTab === 'youtube' ? await submitYouTubeTrack(statusEl) : await submitUploadTrack(statusEl);
     if(!ok) return;
 
-    statusEl.textContent = isAdmin ? "Saved." : "Submitted for review — it'll appear once approved.";
+    statusEl.textContent = "Saved — now live in the library.";
     statusEl.className = "status-msg ok";
     setTimeout(()=>{ closeModal('add-modal'); loadTracks(); }, 900);
   }catch(err){ statusEl.textContent = err.message; statusEl.className = "status-msg err"; }
