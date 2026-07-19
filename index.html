@@ -375,6 +375,9 @@
   .np-panel-head-actions .like-btn{ padding:0; }
   .np-panel-head-actions .like-btn svg{ width:18px; height:18px; color:var(--muted); }
   .np-panel-head-actions .like-btn.liked svg{ color:var(--pink); }
+  .np-more-btn{ background:none; border:none; padding:0; cursor:pointer; color:var(--muted); display:flex; }
+  .np-more-btn:hover{ color:var(--text); }
+  .np-more-btn svg{ width:18px; height:18px; }
 
   .np-art-big{
     width:100%; aspect-ratio:1; border-radius:var(--radius); overflow:hidden;
@@ -751,7 +754,9 @@
       <h3>Now Playing</h3>
       <div class="np-panel-head-actions">
         <button class="like-btn" id="like-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 8.6c0 5.4-8.8 10.4-8.8 10.4S3.2 14 3.2 8.6a4.6 4.6 0 018.8-1.9 4.6 4.6 0 018.8 1.9z"/></svg></button>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+        <button class="np-more-btn" id="np-more-btn" title="Add to playlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+        </button>
       </div>
     </div>
 
@@ -1836,6 +1841,12 @@ function openPlaylistPicker(trackId){
   renderPickerList();
   openModal('playlist-picker-modal');
 }
+
+document.getElementById('np-more-btn').addEventListener('click', ()=>{
+  const t = currentQueue[currentIndex];
+  if(!t){ return; }
+  openPlaylistPicker(t.id);
+});
 
 document.getElementById('picker-create-btn').addEventListener('click', ()=>{
   const input = document.getElementById('picker-new-name');
