@@ -47,16 +47,21 @@
     position:sticky;
     top:0;
     height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar-scroll{
+    flex:1 1 auto;
+    min-height:0;
     overflow-y:auto;
     overscroll-behavior:contain;
     scrollbar-width:none;
+    padding:26px 18px 12px;
   }
-  .sidebar::-webkit-scrollbar{ display:none; }
-  .sidebar-inner{
-    padding:26px 18px;
-    display:flex;
-    flex-direction:column;
-    min-height:100%;
+  .sidebar-scroll::-webkit-scrollbar{ display:none; }
+  .sidebar-pinned{
+    flex:0 0 auto;
+    padding:12px 18px 22px;
   }
   .brand{ display:flex; align-items:center; gap:11px; padding:0 8px 26px; }
   .brand-mark{
@@ -364,13 +369,18 @@
 
   .np-progress{ margin-top:16px; }
   .np-progress input[type=range]{
-    width:100%; -webkit-appearance:none; height:4px; border-radius:2px;
+    width:100%; appearance:none; -webkit-appearance:none; -moz-appearance:none; height:4px; border-radius:2px;
     background:var(--line); outline:none; cursor:pointer;
   }
   .np-progress input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none; width:11px; height:11px; border-radius:50%;
     background:var(--violet-bright); cursor:pointer;
   }
+  .np-progress input[type=range]::-moz-range-thumb{
+    width:11px; height:11px; border:none; border-radius:50%;
+    background:var(--violet-bright); cursor:pointer;
+  }
+  .np-progress input[type=range]::-moz-range-track{ height:4px; border-radius:2px; background:var(--line); }
   .np-time-row{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--muted); margin-top:5px; font-family:'IBM Plex Mono', monospace; }
 
   .np-transport{ display:flex; align-items:center; justify-content:center; gap:22px; margin-top:16px; }
@@ -397,42 +407,20 @@
   }
   .suggest-add:hover{ border-color:var(--violet-bright); color:var(--violet-bright); }
 
-  /* ---------------- Bottom player bar ---------------- */
-  .bottom-player{
-    position:fixed; left:0; right:0; bottom:0; height:74px; z-index:60;
-    background:var(--panel); border-top:1px solid var(--line);
-    display:flex; align-items:center; padding:0 24px; gap:20px;
-    transform:translateY(100%); transition:transform .3s ease;
+  .np-volume-control{ position:relative; flex-shrink:0; }
+  .np-volume-control > button{ background:none; border:none; color:var(--muted); cursor:pointer; display:flex; padding:2px; }
+  .np-volume-control > button:hover{ color:var(--violet-bright); }
+  .np-volume-control svg{ width:18px; height:18px; }
+  .np-volume-popover{
+    display:none; position:absolute; top:calc(100% + 10px); right:-4px; z-index:30;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; box-shadow:0 12px 28px -8px rgba(0,0,0,0.55); width:110px;
   }
-  .bottom-player.active{ transform:translateY(0); }
-  .bp-track{ display:flex; align-items:center; gap:12px; width:240px; flex-shrink:0; }
-  .bp-track img{ width:48px; height:48px; border-radius:6px; object-fit:cover; }
-  .bp-track .bp-title{ font-size:12.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;}
-  .bp-track .bp-sub{ font-size:11px; color:var(--muted); margin-top:2px; }
-  .bp-track .like-btn svg{ width:15px; height:15px; }
-
-  .bp-center{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; max-width:560px; margin:0 auto; }
-  .bp-transport{ display:flex; align-items:center; gap:20px; }
-  .bp-transport button{ background:none; border:none; color:var(--text); cursor:pointer; opacity:0.8; }
-  .bp-transport button:hover{ opacity:1; color:var(--violet-bright); }
-  .bp-transport button svg{ width:15px; height:15px; }
-  .bp-transport .bp-play{
-    width:34px; height:34px; border-radius:50%; background:#fff; color:#0B0A16;
-    display:flex; align-items:center; justify-content:center; opacity:1;
-  }
-  .bp-transport .bp-play:hover{ background:var(--violet-bright); color:#fff; }
-  .bp-seek-row{ display:flex; align-items:center; gap:8px; width:100%; }
-  .bp-seek-row span{ font-size:10.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; width:32px; text-align:center; }
-  .bp-seek-row input{ flex:1; -webkit-appearance:none; height:3px; border-radius:2px; background:var(--line); outline:none; cursor:pointer; }
-  .bp-seek-row input::-webkit-slider-thumb{ -webkit-appearance:none; width:10px; height:10px; border-radius:50%; background:var(--violet-bright); cursor:pointer; }
-
-  .bp-right{ width:220px; flex-shrink:0; display:flex; align-items:center; justify-content:flex-end; gap:14px; }
-  .bp-right button{ background:none; border:none; color:var(--muted); cursor:pointer; }
-  .bp-right button:hover{ color:var(--text); }
-  .bp-right svg{ width:16px; height:16px; }
-  .bp-volume{ display:flex; align-items:center; gap:6px; width:120px; }
-  .bp-volume input{ flex:1; -webkit-appearance:none; height:3px; border-radius:2px; background:var(--line); outline:none; cursor:pointer; }
-  .bp-volume input::-webkit-slider-thumb{ -webkit-appearance:none; width:9px; height:9px; border-radius:50%; background:var(--violet-bright); cursor:pointer; }
+  .np-volume-popover.open{ display:block; }
+  .np-volume-popover input{ width:100%; appearance:none; -webkit-appearance:none; -moz-appearance:none; height:3px; border-radius:2px; background:var(--line); outline:none; cursor:pointer; }
+  .np-volume-popover input::-webkit-slider-thumb{ -webkit-appearance:none; width:11px; height:11px; border-radius:50%; background:var(--violet-bright); cursor:pointer; }
+  .np-volume-popover input::-moz-range-thumb{ width:11px; height:11px; border:none; border-radius:50%; background:var(--violet-bright); cursor:pointer; }
+  .np-volume-popover input::-moz-range-track{ height:3px; border-radius:2px; background:var(--line); }
 
   #yt-hidden{ position:fixed; width:1px; height:1px; bottom:0; left:0; opacity:0; pointer-events:none; }
 
@@ -522,8 +510,6 @@
   }
   .upload-progress-fill{ height:100%; width:0%; background:linear-gradient(135deg, var(--violet), var(--violet-bright)); transition:width .15s ease; }
 
-  body{ padding-bottom:74px; }
-
   @media (max-width:1200px){
     .app{ grid-template-columns:80px 1fr 300px; }
     .brand-text, .nav-item span, .premium-card, .user-row .u-name, .user-row .u-plan{ display:none; }
@@ -545,7 +531,7 @@
 
   <!-- ============ SIDEBAR ============ -->
   <aside class="sidebar">
-   <div class="sidebar-inner">
+   <div class="sidebar-scroll">
     <div class="brand">
       <div class="brand-mark">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 8v8l8 6 8-6V8l-8-6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" fill="#fff"/></svg>
@@ -572,7 +558,9 @@
       <div class="nav-item" id="nav-collection"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6c0 5.4-8.8 10.4-8.8 10.4S3.2 14 3.2 8.6a4.6 4.6 0 018.8-1.9 4.6 4.6 0 018.8 1.9z"/></svg><span>My Collection</span></div>
       <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg><span>Downloads</span></div>
     </nav>
+   </div>
 
+   <div class="sidebar-pinned">
     <div class="premium-card">
       <div class="pc-title">👑 Anora Premium</div>
       <div class="pc-sub">No ads. Offline. Unlimited.</div>
@@ -706,6 +694,14 @@
         <div class="np-title-big" id="np-title-big">Nothing playing</div>
         <div class="np-sub-big" id="np-sub-big">Pick a track to begin</div>
       </div>
+      <div class="np-volume-control" id="volume-control">
+        <button id="mute-btn" title="Volume">
+          <svg id="mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/></svg>
+        </button>
+        <div class="np-volume-popover" id="volume-popover">
+          <input type="range" id="volume" min="0" max="100" value="80">
+        </div>
+      </div>
     </div>
 
     <div class="np-progress">
@@ -727,44 +723,6 @@
     <div id="suggested-list"></div>
   </aside>
 
-</div>
-
-<!-- ============ BOTTOM PLAYER BAR ============ -->
-<div class="bottom-player active" id="player-bar">
-  <div class="bp-track">
-    <img id="bp-art" src="audio1.png" alt="">
-    <div>
-      <div class="bp-title" id="bp-title">Peace comes from within</div>
-      <div class="bp-sub" id="bp-sub">Pick a track to start listening</div>
-    </div>
-    <button class="like-btn" id="like-btn-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 8.6c0 5.4-8.8 10.4-8.8 10.4S3.2 14 3.2 8.6a4.6 4.6 0 018.8-1.9 4.6 4.6 0 018.8 1.9z"/></svg></button>
-  </div>
-  <div class="bp-center">
-    <div class="bp-transport">
-      <button id="shuffle-btn-2" title="Shuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h4l9 16h3M4 20h4l3-5.2M17 4h3v3M14 8.8L17 4M17 20v-3l3 3"/></svg></button>
-      <button id="prev-btn-2" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-      <button class="bp-play" id="play-toggle-2" title="Play/Pause">
-        <svg id="play-icon-2" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      </button>
-      <button id="next-btn-2" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6v12l8.5-6z"/></svg></button>
-      <button id="repeat-btn-2" title="Repeat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4M3 11V9a4 4 0 014-4h14M7 22l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg></button>
-    </div>
-    <div class="bp-seek-row">
-      <span id="time-current-2">0:00</span>
-      <input type="range" id="seek-2" value="0" min="0" max="100" step="0.5">
-      <span id="time-total-2">0:00</span>
-    </div>
-  </div>
-  <div class="bp-right">
-    <div class="bp-volume">
-      <button id="mute-btn" title="Mute" style="background:none;border:none;color:var(--muted);cursor:pointer;display:flex;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4V5z"/></svg>
-      </button>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;width:16px;height:16px;color:var(--muted);"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/></svg>
-      <input type="range" id="volume" min="0" max="100" value="80">
-    </div>
-    <button id="queue-toggle-btn" title="Queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h13M3 12h13M3 18h13M18 9v10m0 0l-3-3m3 3l3-3"/></svg></button>
-  </div>
 </div>
 
 <div id="yt-hidden"><div id="yt-player"></div></div>
@@ -1680,7 +1638,6 @@ async function handleDeleteTrack(id){
     if(playing && playing.id === id){
       nativePlayer.pause(); nativePlayer.removeAttribute('src');
       if(ytReady && ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
-      document.getElementById('player-bar').classList.remove('active');
       currentQueue = []; currentIndex = -1;
     } else {
       const idx = currentQueue.findIndex(q => q.id === id);
@@ -1913,7 +1870,6 @@ loadYouTubeAPI();
 function setPlayIcons(playing){
   const icon = playing ? '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
   document.getElementById('play-icon').innerHTML = icon;
-  document.getElementById('play-icon-2').innerHTML = icon;
 }
 
 const nativePlayer = document.getElementById('native-player');
@@ -1921,11 +1877,10 @@ function isUploadTrack(t){ return !!(t && t.source === 'upload' && t.audioUrl); 
 
 function updateSeekUI(cur, dur){
   if(!isFinite(dur) || dur <= 0) return;
-  [document.getElementById('seek'), document.getElementById('seek-2')].forEach(s=>{ s.max = dur; s.value = cur; });
+  const s = document.getElementById('seek');
+  s.max = dur; s.value = cur;
   document.getElementById('time-current').textContent = formatTime(cur);
   document.getElementById('time-total').textContent = formatTime(dur);
-  document.getElementById('time-current-2').textContent = formatTime(cur);
-  document.getElementById('time-total-2').textContent = formatTime(dur);
 }
 
 nativePlayer.addEventListener('play', ()=> setPlayIcons(true));
@@ -1959,28 +1914,20 @@ function updateLikeUI(){
   const t = currentQueue[currentIndex];
   const liked = t && likedIds.has(t.id);
   document.getElementById('like-btn').classList.toggle('liked', !!liked);
-  document.getElementById('like-btn-2').classList.toggle('liked', !!liked);
 }
 
-[document.getElementById('like-btn'), document.getElementById('like-btn-2')].forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const t = currentQueue[currentIndex];
-    if(!t) return;
-    toggleWatchlist(t.id);
-  });
+document.getElementById('like-btn').addEventListener('click', ()=>{
+  const t = currentQueue[currentIndex];
+  if(!t) return;
+  toggleWatchlist(t.id);
 });
 
 function loadCurrent(){
   const t = currentQueue[currentIndex];
   if(!t) return;
-  const art = t.thumb || PLACEHOLDER_ART;
   document.getElementById('np-art-big-img').src = t.thumb || "audio1.png";
   document.getElementById('np-title-big').textContent = t.title;
   document.getElementById('np-sub-big').textContent = t.channel || '';
-  document.getElementById('bp-art').src = art;
-  document.getElementById('bp-title').textContent = t.title;
-  document.getElementById('bp-sub').textContent = t.channel || '';
-  document.getElementById('player-bar').classList.add('active');
   updateLikeUI();
   renderSuggested();
   pushRecent(t.id);
@@ -2026,17 +1973,17 @@ function togglePlay(){
   if(state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo(); else ytPlayer.playVideo();
 }
 
-[document.getElementById('play-toggle'), document.getElementById('play-toggle-2')].forEach(b=>b.addEventListener('click', togglePlay));
-[document.getElementById('next-btn'), document.getElementById('next-btn-2')].forEach(b=>b.addEventListener('click', playNext));
-[document.getElementById('prev-btn'), document.getElementById('prev-btn-2')].forEach(b=>b.addEventListener('click', playPrev));
-[document.getElementById('shuffle-btn'), document.getElementById('shuffle-btn-2')].forEach(b=>b.addEventListener('click', ()=>{
+document.getElementById('play-toggle').addEventListener('click', togglePlay);
+document.getElementById('next-btn').addEventListener('click', playNext);
+document.getElementById('prev-btn').addEventListener('click', playPrev);
+document.getElementById('shuffle-btn').addEventListener('click', ()=>{
   shuffleOn = !shuffleOn;
-  [document.getElementById('shuffle-btn'), document.getElementById('shuffle-btn-2')].forEach(x=> x.style.color = shuffleOn ? 'var(--violet-bright)' : '');
-}));
-[document.getElementById('repeat-btn'), document.getElementById('repeat-btn-2')].forEach(b=>b.addEventListener('click', ()=>{
+  document.getElementById('shuffle-btn').style.color = shuffleOn ? 'var(--violet-bright)' : '';
+});
+document.getElementById('repeat-btn').addEventListener('click', ()=>{
   repeatOn = !repeatOn;
-  [document.getElementById('repeat-btn'), document.getElementById('repeat-btn-2')].forEach(x=> x.style.color = repeatOn ? 'var(--violet-bright)' : '');
-}));
+  document.getElementById('repeat-btn').style.color = repeatOn ? 'var(--violet-bright)' : '';
+});
 
 function formatTime(sec){
   if(!isFinite(sec) || sec < 0) sec = 0;
@@ -2053,35 +2000,33 @@ function startSeekPolling(){
 }
 function stopSeekPolling(){ if(seekPoll) clearInterval(seekPoll); }
 
-[document.getElementById('seek'), document.getElementById('seek-2')].forEach(s=>{
-  s.addEventListener('input', (e)=>{
-    const t = currentQueue[currentIndex];
-    const val = Number(e.target.value);
-    if(isUploadTrack(t)) nativePlayer.currentTime = val;
-    else if(ytPlayer && ytPlayer.seekTo) ytPlayer.seekTo(val, true);
-  });
+document.getElementById('seek').addEventListener('input', (e)=>{
+  const t = currentQueue[currentIndex];
+  const val = Number(e.target.value);
+  if(isUploadTrack(t)) nativePlayer.currentTime = val;
+  else if(ytPlayer && ytPlayer.seekTo) ytPlayer.seekTo(val, true);
 });
 document.getElementById('volume').addEventListener('input', (e)=>{
   const v = Number(e.target.value);
   nativePlayer.volume = v / 100;
-  if(ytPlayer && ytPlayer.setVolume) ytPlayer.setVolume(v);
+  nativePlayer.muted = false;
+  if(ytPlayer && ytPlayer.setVolume){ ytPlayer.setVolume(v); if(ytPlayer.unMute) ytPlayer.unMute(); }
+  document.getElementById('mute-icon').innerHTML = v === 0 ? SOUND_MUTED_ICON : SOUND_ON_ICON;
 });
 
-let mutedBeforeVolume = 80;
-document.getElementById('mute-btn').addEventListener('click', ()=>{
-  const volumeSlider = document.getElementById('volume');
-  const currentlyMuted = nativePlayer.muted || (ytPlayer && ytPlayer.isMuted && ytPlayer.isMuted());
-  if(currentlyMuted){
-    nativePlayer.muted = false;
-    nativePlayer.volume = mutedBeforeVolume / 100;
-    if(ytPlayer && ytPlayer.unMute){ ytPlayer.unMute(); ytPlayer.setVolume(mutedBeforeVolume); }
-    volumeSlider.value = mutedBeforeVolume;
-  } else {
-    mutedBeforeVolume = Number(volumeSlider.value) || 80;
-    nativePlayer.muted = true;
-    if(ytPlayer && ytPlayer.mute) ytPlayer.mute();
-    volumeSlider.value = 0;
-  }
+const SOUND_ON_ICON = '<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18 6a9 9 0 010 12"/>';
+const SOUND_MUTED_ICON = '<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M16 9l5 6M21 9l-5 6"/>';
+
+// Clicking the speaker icon opens/closes the volume popover so the
+// person can drag the slider to increase or decrease sound. Clicking
+// anywhere outside the popover closes it again.
+document.getElementById('mute-btn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('volume-popover').classList.toggle('open');
+});
+document.addEventListener('click', (e)=>{
+  const control = document.getElementById('volume-control');
+  if(control && !control.contains(e.target)) document.getElementById('volume-popover').classList.remove('open');
 });
 
 // ---------- Search ----------
