@@ -225,6 +225,16 @@
   .feat-card .f-title{ font-size:13.5px; font-weight:600; margin-top:10px; }
   .feat-card .f-sub{ font-size:11.5px; color:var(--muted); margin-top:2px; }
 
+  .track-delete-btn{
+    position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .18s ease, background .15s ease;
+  }
+  .track-delete-btn svg{ width:14px; height:14px; }
+  .feat-card:hover .track-delete-btn{ opacity:1; }
+  .track-delete-btn:hover{ background:rgba(220,38,38,0.9); }
+
   /* ---------------- Category grid ---------------- */
   .cat-grid{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:14px;
@@ -846,11 +856,21 @@
 //        allow create: if request.auth != null
 //          && request.resource.data.addedBy == request.auth.token.email
 //          && request.resource.data.approved == true;
-//        allow update, delete: if request.auth != null
+//        allow update: if request.auth != null
 //          && request.auth.token.email in ["you@example.com"];
+//        allow delete: if request.auth != null
+//          && (request.auth.token.email in ["you@example.com"]
+//              || resource.data.addedBy == request.auth.token.email);
 //      }
-//    (update/delete still admin-only, for cleanup/removal — adjust
-//    that email list to match ADMIN_EMAILS below.)
+//    (delete is allowed for admins AND whoever uploaded the track, so
+//    the in-app delete button works for a track's own uploader; update
+//    stays admin-only. Also add a matching Storage rule so uploaders
+//    can remove the underlying audio file, not just the Firestore doc:
+//      match /audioLibrary/{category}/{fileName} {
+//        allow read: if true;
+//        allow write, delete: if request.auth != null;
+//      }
+//    )
 const firebaseConfig = {
   apiKey: "AIzaSyBB8QrSBR43pQVQeH0SmhVytE9nbsusYkE",
   authDomain: "anora-89b5d.firebaseapp.com",
@@ -1406,17 +1426,80 @@ function closeCategoryPage(){
 
 document.getElementById('category-back-btn').addEventListener('click', closeCategoryPage);
 
+function canManageTrack(t){
+  const user = auth.currentUser;
+  if(!user || !t) return false;
+  if(isAdmin) return true;
+  return !!(t.addedBy && t.addedBy === user.email);
+}
+
 function trackCardHTML(t){
+  const delBtn = canManageTrack(t)
+    ? `<button class="track-delete-btn" data-delete="${t.id}" title="Delete this upload">
+         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
+       </button>`
+    : '';
   return `
     <div class="feat-card" data-track="${t.id}">
       <div class="feat-art">
         <img src="${t.thumb || PLACEHOLDER_ART}" alt="">
         <div class="feat-play"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+        ${delBtn}
       </div>
       <div class="f-title">${t.title}</div>
       <div class="f-sub">${t.channel || ''}</div>
     </div>
   `;
+}
+
+// Delete gets its own capture-phase listener so a click on the trash
+// icon never also triggers the card's own "play this track" handler.
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-delete]');
+  if(!btn) return;
+  e.stopPropagation();
+  e.preventDefault();
+  handleDeleteTrack(btn.dataset.delete);
+}, true);
+
+async function handleDeleteTrack(id){
+  const t = allTracks.find(tr => tr.id === id);
+  if(!t) return;
+  if(!canManageTrack(t)){ alert("You don't have permission to delete this track."); return; }
+  if(!confirm(`Delete "${t.title}"? This can't be undone.`)) return;
+
+  try{
+    await db.collection('tracks').doc(id).delete();
+    if(t.source === 'upload' && t.storagePath){
+      try{ await storage.ref(t.storagePath).delete(); }
+      catch(err){ console.warn('Storage file removal failed (track entry was still deleted):', err); }
+    }
+
+    // Stop playback / clean the queue if the deleted track was involved.
+    const playing = currentQueue[currentIndex];
+    if(playing && playing.id === id){
+      nativePlayer.pause(); nativePlayer.removeAttribute('src');
+      if(ytReady && ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+      document.getElementById('player-bar').classList.remove('active');
+      currentQueue = []; currentIndex = -1;
+    } else {
+      const idx = currentQueue.findIndex(q => q.id === id);
+      if(idx > -1){
+        currentQueue = currentQueue.filter(q => q.id !== id);
+        if(idx < currentIndex) currentIndex--;
+      }
+    }
+
+    likedIds.delete(id);
+    localStorage.setItem('anora_liked', JSON.stringify([...likedIds]));
+    recentlyPlayed = recentlyPlayed.filter(x => x !== id);
+    localStorage.setItem('anora_recent', JSON.stringify(recentlyPlayed));
+
+    await loadTracks();
+  }catch(err){
+    console.error('Delete failed:', err);
+    alert('Could not delete this track: ' + err.message);
+  }
 }
 
 function renderFeatured(){
