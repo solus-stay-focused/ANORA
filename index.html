@@ -31,7 +31,7 @@
   }
   ::selection{ background:var(--violet); color:#fff; }
   button{ font-family:inherit; }
-  img{ display:block; }
+  img{ display:block; -webkit-user-drag:none; user-select:none; }
 
   /* ---------------- App shell ---------------- */
   .app{
@@ -1538,6 +1538,15 @@ async function handleDeleteTrack(id){
     alert('Could not delete this track: ' + err.message);
   }
 }
+
+// Stop the browser's native "drag this image out" ghost/preview. Without
+// this, click-dragging a row that starts on top of an <img> (album art,
+// thumbnails, etc.) triggers native image drag instead of our own
+// scroll-drag, which is what caused images to visually detach while
+// dragging.
+document.addEventListener('dragstart', (e)=>{
+  if(e.target.tagName === 'IMG') e.preventDefault();
+});
 
 // ---------- Drag-to-scroll for horizontal rows ----------
 // Lets mouse users click-and-drag a row (Featured, category rows,
