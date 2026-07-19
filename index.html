@@ -260,6 +260,43 @@
   .track-watchlist-btn.on{ opacity:1; background:rgba(124,58,237,0.9); }
   .track-watchlist-btn:hover{ background:rgba(168,85,247,0.9); }
 
+  .track-playlist-btn{
+    position:absolute; bottom:8px; left:8px; width:28px; height:28px; border-radius:50%;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(4px); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .18s ease, background .15s ease;
+  }
+  .track-playlist-btn svg{ width:14px; height:14px; }
+  .feat-card:hover .track-playlist-btn{ opacity:1; }
+  .track-playlist-btn:hover{ background:rgba(168,85,247,0.9); }
+
+  .picker-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 4px; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .picker-row:last-child{ border-bottom:none; }
+  .picker-row .pr-name{ font-weight:600; }
+  .picker-row .pr-count{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .picker-row button{
+    flex-shrink:0; padding:6px 14px; border-radius:999px; border:1px solid var(--line);
+    background:transparent; color:var(--muted); font-size:12px; cursor:pointer;
+  }
+  .picker-row button.in{ background:var(--violet); border-color:var(--violet); color:#fff; }
+
+  .playlist-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; cursor:pointer; transition:border-color .15s ease, transform .15s ease;
+  }
+  .playlist-card:hover{ border-color:rgba(124,58,237,0.4); transform:translateY(-2px); }
+  .playlist-card .pl-icon{
+    width:44px; height:44px; border-radius:10px; margin-bottom:12px;
+    background:linear-gradient(135deg, var(--violet), var(--pink));
+    display:flex; align-items:center; justify-content:center;
+  }
+  .playlist-card .pl-icon svg{ width:20px; height:20px; }
+  .playlist-card .pl-name{ font-size:14px; font-weight:700; }
+  .playlist-card .pl-count{ font-size:11.5px; color:var(--muted); margin-top:3px; }
+
   /* ---------------- Category grid ---------------- */
   .cat-grid{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:14px;
@@ -532,7 +569,7 @@
       <div class="nav-item" data-scroll="featured"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Discover</span></div>
       <div class="nav-item" data-open-search><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Search</span></div>
       <div class="nav-item" data-scroll="categories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Library</span></div>
-      <div class="nav-item" data-scroll="recent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12"/></svg><span>Playlists</span></div>
+      <div class="nav-item" id="nav-playlists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12"/></svg><span>Playlists</span></div>
       <div class="nav-item" id="nav-watchlist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3.5h12a1 1 0 011 1V21l-7-4-7 4V4.5a1 1 0 011-1z"/></svg><span>Watchlist</span></div>
       <div class="nav-item" data-cat="podcast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg><span>Podcasts</span></div>
       <div class="nav-item" data-cat="audiobook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h11a2 2 0 012 2v14H6a2 2 0 01-2-2V4z"/><path d="M17 4h3v16h-3"/></svg><span>Audiobooks</span></div>
@@ -666,6 +703,43 @@
           </div>
         </div>
         <div class="track-grid" id="history-page-grid"></div>
+      </div>
+
+      <!-- ============ PLAYLISTS OVERVIEW PAGE ============ -->
+      <div id="playlists-view" style="display:none;">
+        <div class="category-page-head">
+          <div class="cat-back-btn" id="playlists-back-btn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="category-page-icon c1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+          </div>
+          <div class="category-page-title">
+            <h1>Playlists</h1>
+            <p id="playlists-page-count">0 playlists</p>
+          </div>
+          <button class="btn-primary" id="new-playlist-btn" style="margin-left:auto; padding:9px 18px; font-size:12.5px;">+ New playlist</button>
+        </div>
+        <div class="track-grid" id="playlists-page-grid"></div>
+      </div>
+
+      <!-- ============ SINGLE PLAYLIST PAGE ============ -->
+      <div id="playlist-detail-view" style="display:none;">
+        <div class="category-page-head">
+          <div class="cat-back-btn" id="playlist-detail-back-btn" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="category-page-icon c3">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <div class="category-page-title">
+            <h1 id="playlist-detail-name">Playlist</h1>
+            <p id="playlist-detail-count">0 tracks</p>
+          </div>
+          <button class="btn-secondary" id="rename-playlist-btn" style="margin-left:auto; padding:9px 16px; font-size:12.5px;">Rename</button>
+          <button class="btn-secondary" id="delete-playlist-btn" style="color:#F87171;border-color:rgba(248,113,113,0.4); padding:9px 16px; font-size:12.5px;">Delete</button>
+        </div>
+        <div class="track-grid" id="playlist-detail-grid"></div>
       </div>
 
     </main>
@@ -825,6 +899,26 @@
       <button data-close="add-modal">Cancel</button>
       <button class="go" id="add-submit">Fetch & save</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ ADD-TO-PLAYLIST MODAL ============ -->
+<div class="modal-backdrop" id="playlist-picker-modal">
+  <div class="modal">
+    <button class="modal-close" data-close="playlist-picker-modal">×</button>
+    <h3>Add to playlist</h3>
+    <p class="modal-sub">Choose a playlist, or create a new one.</p>
+
+    <div class="field" style="display:flex; gap:8px; align-items:flex-end;">
+      <div style="flex:1;">
+        <label>New playlist name</label>
+        <input type="text" id="picker-new-name" placeholder="e.g. Friday Nasheeds" maxlength="60">
+      </div>
+      <button class="modal-actions go" id="picker-create-btn" style="flex:0 0 auto; width:auto; padding:10px 16px; margin-top:0;">Create</button>
+    </div>
+
+    <div id="playlist-picker-list" style="margin-top:6px; max-height:260px; overflow-y:auto;"></div>
+    <div class="status-msg" id="picker-status"></div>
   </div>
 </div>
 
@@ -1466,6 +1560,8 @@ function openCategoryPage(key){
   if(!cat) return;
   closeWatchlistPage();
   closeHistoryPage();
+  closePlaylistsPage();
+  closePlaylistDetail();
   openCategoryKey = key;
   document.getElementById('category-page-name').textContent = cat.label;
   document.getElementById('category-page-icon').className = 'category-page-icon ' + cat.tile;
@@ -1510,6 +1606,8 @@ function renderWatchlistPageGrid(){
 function openWatchlistPage(sourceNavId){
   closeCategoryPage();
   closeHistoryPage();
+  closePlaylistsPage();
+  closePlaylistDetail();
   watchlistOpen = true;
   renderWatchlistPageGrid();
   document.getElementById('home-view').style.display = 'none';
@@ -1552,6 +1650,8 @@ function renderHistoryPageGrid(){
 function openHistoryPage(){
   closeCategoryPage();
   closeWatchlistPage();
+  closePlaylistsPage();
+  closePlaylistDetail();
   historyOpen = true;
   renderHistoryPageGrid();
   document.getElementById('home-view').style.display = 'none';
@@ -1574,33 +1674,230 @@ document.getElementById('history-back-btn').addEventListener('click', ()=>{
   setActiveNav(document.getElementById('nav-home'));
 });
 
+// ---------- Playlists ----------
+let playlists = JSON.parse(localStorage.getItem('anora_playlists') || '[]'); // [{id, name, trackIds:[]}]
+let playlistsOpen = false;
+let openPlaylistId = null;
+let pickerTrackId = null;
+
+function savePlaylists(){
+  localStorage.setItem('anora_playlists', JSON.stringify(playlists));
+}
+function newPlaylistId(){
+  return 'pl_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+function renderPlaylistsGrid(){
+  document.getElementById('playlists-page-count').textContent =
+    playlists.length === 1 ? '1 playlist' : `${playlists.length} playlists`;
+  const grid = document.getElementById('playlists-page-grid');
+  grid.innerHTML = playlists.length ? playlists.map(p => `
+    <div class="playlist-card" data-open-playlist="${p.id}">
+      <div class="pl-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+      <div class="pl-name">${p.name}</div>
+      <div class="pl-count">${p.trackIds.length === 1 ? '1 track' : p.trackIds.length + ' tracks'}</div>
+    </div>
+  `).join('') : `<div class="empty-note">No playlists yet — tap "+ New playlist" above to create your first one.</div>`;
+  grid.querySelectorAll('[data-open-playlist]').forEach(el=>{
+    el.addEventListener('click', ()=> openPlaylistDetail(el.dataset.openPlaylist));
+  });
+}
+
+function openPlaylistsPage(){
+  closeCategoryPage();
+  closeWatchlistPage();
+  closeHistoryPage();
+  closePlaylistDetail();
+  playlistsOpen = true;
+  renderPlaylistsGrid();
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('playlists-view').style.display = 'block';
+  window.scrollTo({ top:0, left:0, behavior:'auto' });
+  setActiveNav(document.getElementById('nav-playlists'));
+  if(location.hash !== '#playlists') location.hash = 'playlists';
+}
+function closePlaylistsPage(){
+  if(!playlistsOpen) return;
+  playlistsOpen = false;
+  document.getElementById('playlists-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'block';
+  if(location.hash) history.pushState('', document.title, location.pathname + location.search);
+}
+document.getElementById('nav-playlists').addEventListener('click', openPlaylistsPage);
+document.getElementById('new-playlist-btn').addEventListener('click', ()=> openPlaylistPicker(null));
+document.getElementById('playlists-back-btn').addEventListener('click', ()=>{
+  closePlaylistsPage();
+  setActiveNav(document.getElementById('nav-home'));
+});
+
+function renderPlaylistDetailGrid(){
+  const p = playlists.find(pl => pl.id === openPlaylistId);
+  if(!p) return;
+  document.getElementById('playlist-detail-name').textContent = p.name;
+  document.getElementById('playlist-detail-count').textContent =
+    p.trackIds.length === 1 ? '1 track' : `${p.trackIds.length} tracks`;
+  const tracks = p.trackIds.map(id => allTracks.find(t=>t.id===id)).filter(Boolean);
+  const grid = document.getElementById('playlist-detail-grid');
+  grid.innerHTML = tracks.length ? tracks.map(trackCardHTML).join('') :
+    `<div class="empty-note">This playlist is empty — use the + icon on any track to add it here.</div>`;
+  grid.querySelectorAll('[data-track]').forEach(el=>{
+    el.addEventListener('click', ()=> playFromQueue(tracks, el.dataset.track));
+  });
+}
+
+function openPlaylistDetail(id){
+  const p = playlists.find(pl => pl.id === id);
+  if(!p) return;
+  closeCategoryPage();
+  closeWatchlistPage();
+  closeHistoryPage();
+  closePlaylistsPage();
+  openPlaylistId = id;
+  renderPlaylistDetailGrid();
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('playlist-detail-view').style.display = 'block';
+  window.scrollTo({ top:0, left:0, behavior:'auto' });
+  setActiveNav(document.getElementById('nav-playlists'));
+  if(location.hash !== '#playlist-' + id) location.hash = 'playlist-' + id;
+}
+function closePlaylistDetail(){
+  if(!openPlaylistId) return;
+  openPlaylistId = null;
+  document.getElementById('playlist-detail-view').style.display = 'none';
+  document.getElementById('home-view').style.display = 'block';
+  if(location.hash) history.pushState('', document.title, location.pathname + location.search);
+}
+document.getElementById('playlist-detail-back-btn').addEventListener('click', ()=>{
+  closePlaylistDetail();
+  openPlaylistsPage();
+});
+
+document.getElementById('rename-playlist-btn').addEventListener('click', ()=>{
+  const p = playlists.find(pl => pl.id === openPlaylistId);
+  if(!p) return;
+  const name = prompt('Rename playlist', p.name);
+  if(name && name.trim()){
+    p.name = name.trim().slice(0, 60);
+    savePlaylists();
+    renderPlaylistDetailGrid();
+  }
+});
+document.getElementById('delete-playlist-btn').addEventListener('click', ()=>{
+  const p = playlists.find(pl => pl.id === openPlaylistId);
+  if(!p) return;
+  if(confirm(`Delete "${p.name}"? This can't be undone.`)){
+    playlists = playlists.filter(pl => pl.id !== openPlaylistId);
+    savePlaylists();
+    closePlaylistDetail();
+    openPlaylistsPage();
+  }
+});
+
+// ---------- Add-to-playlist picker ----------
+function renderPickerList(){
+  const list = document.getElementById('playlist-picker-list');
+  if(playlists.length === 0){
+    list.innerHTML = `<div class="empty-note">No playlists yet — create one above.</div>`;
+    return;
+  }
+  list.innerHTML = playlists.map(p => {
+    const inIt = pickerTrackId && p.trackIds.includes(pickerTrackId);
+    const toggleBtn = pickerTrackId
+      ? `<button class="${inIt ? 'in' : ''}" data-picker-toggle="${p.id}">${inIt ? 'Added ✓' : 'Add'}</button>`
+      : '';
+    return `
+      <div class="picker-row">
+        <div>
+          <div class="pr-name">${p.name}</div>
+          <div class="pr-count">${p.trackIds.length} track${p.trackIds.length===1?'':'s'}</div>
+        </div>
+        ${toggleBtn}
+      </div>
+    `;
+  }).join('');
+  list.querySelectorAll('[data-picker-toggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = playlists.find(pl => pl.id === btn.dataset.pickerToggle);
+      if(!p) return;
+      const idx = p.trackIds.indexOf(pickerTrackId);
+      if(idx === -1) p.trackIds.push(pickerTrackId); else p.trackIds.splice(idx, 1);
+      savePlaylists();
+      renderPickerList();
+      if(playlistsOpen) renderPlaylistsGrid();
+      if(openPlaylistId) renderPlaylistDetailGrid();
+    });
+  });
+}
+
+function openPlaylistPicker(trackId){
+  pickerTrackId = trackId;
+  document.getElementById('picker-new-name').value = '';
+  document.getElementById('picker-status').textContent = '';
+  renderPickerList();
+  openModal('playlist-picker-modal');
+}
+
+document.getElementById('picker-create-btn').addEventListener('click', ()=>{
+  const input = document.getElementById('picker-new-name');
+  const name = input.value.trim();
+  const statusEl = document.getElementById('picker-status');
+  if(!name){ statusEl.textContent = 'Give it a name first.'; statusEl.className = 'status-msg err'; return; }
+  const p = { id: newPlaylistId(), name: name.slice(0, 60), trackIds: pickerTrackId ? [pickerTrackId] : [] };
+  playlists.push(p);
+  savePlaylists();
+  input.value = '';
+  statusEl.textContent = 'Playlist created.';
+  statusEl.className = 'status-msg ok';
+  renderPickerList();
+});
+
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-add-playlist]');
+  if(!btn) return;
+  e.stopPropagation();
+  e.preventDefault();
+  openPlaylistPicker(btn.dataset.addPlaylist);
+}, true);
+
 // Keep the open page in sync with the URL: refreshing, using the
 // browser's back/forward buttons, or sharing a link with #cat-nasheed,
 // #watchlist, or #history in it all land on the same page instead of
 // always resetting to Home.
 window.addEventListener('hashchange', ()=>{
   const m = location.hash.match(/^#cat-(.+)$/);
+  const pm = location.hash.match(/^#playlist-(.+)$/);
   if(m && CATEGORIES.some(c => c.key === m[1])){
     closeWatchlistPage();
     closeHistoryPage();
+    closePlaylistsPage();
+    closePlaylistDetail();
     if(openCategoryKey !== m[1]) openCategoryPage(m[1]);
   } else if(location.hash === '#watchlist'){
     if(!watchlistOpen) openWatchlistPage();
   } else if(location.hash === '#history'){
     if(!historyOpen) openHistoryPage();
+  } else if(location.hash === '#playlists'){
+    if(!playlistsOpen) openPlaylistsPage();
+  } else if(pm && playlists.some(p => p.id === pm[1])){
+    if(openPlaylistId !== pm[1]) openPlaylistDetail(pm[1]);
   } else {
     closeCategoryPage();
     closeWatchlistPage();
     closeHistoryPage();
+    closePlaylistsPage();
+    closePlaylistDetail();
     setActiveNav(document.getElementById('nav-home'));
   }
 });
 
 function restoreViewFromHash(){
   const m = location.hash.match(/^#cat-(.+)$/);
+  const pm = location.hash.match(/^#playlist-(.+)$/);
   if(m && CATEGORIES.some(c => c.key === m[1])) openCategoryPage(m[1]);
   else if(location.hash === '#watchlist') openWatchlistPage();
   else if(location.hash === '#history') openHistoryPage();
+  else if(location.hash === '#playlists') openPlaylistsPage();
+  else if(pm && playlists.some(p => p.id === pm[1])) openPlaylistDetail(pm[1]);
 }
 
 function canManageTrack(t){
@@ -1623,6 +1920,9 @@ function trackCardHTML(t){
         <div class="feat-play"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
         <button class="track-watchlist-btn${onWatchlist ? ' on' : ''}" data-watchlist="${t.id}" title="${onWatchlist ? 'Remove from watchlist' : 'Add to watchlist'}">
           <svg viewBox="0 0 24 24" fill="${onWatchlist ? '#fff' : 'none'}" stroke="#fff" stroke-width="1.8"><path d="M6 3.5h12a1 1 0 011 1V21l-7-4-7 4V4.5a1 1 0 011-1z"/></svg>
+        </button>
+        <button class="track-playlist-btn" data-add-playlist="${t.id}" title="Add to playlist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         </button>
         ${delBtn}
       </div>
