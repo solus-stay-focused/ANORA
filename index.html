@@ -964,6 +964,8 @@
 // 3. Firestore Database → create database → add rules so each user can only
 //    read/write their own doc, e.g.:
 //      match /users/{uid} { allow read, write: if request.auth.uid == uid; }
+//    (this same doc also stores each user's `watchlist` and `history`
+//    arrays, so no extra rule is needed for those)
 // 4. Track submissions publish immediately for any signed-in user —
 //    there is no approval gate. Firestore rules must allow this or
 //    writes will be rejected client-side-looking-fine-but-failing:
@@ -1059,8 +1061,11 @@ let currentQueue = [];
 let currentIndex = -1;
 let shuffleOn = false;
 let repeatOn = false;
-let likedIds = new Set(JSON.parse(localStorage.getItem('anora_liked') || '[]'));
-let recentlyPlayed = JSON.parse(localStorage.getItem('anora_recent') || '[]');
+// Watchlist (likedIds) and History (recentlyPlayed) are account-only —
+// they're loaded from the signed-in user's Firestore doc in
+// auth.onAuthStateChanged below, and stay empty for guests.
+let likedIds = new Set();
+let recentlyPlayed = [];
 let ytPlayer = null, ytReady = false, seekPoll = null;
 let pendingPreview = null;
 
@@ -1149,9 +1154,9 @@ document.querySelectorAll('[data-scroll]').forEach(el=>{
 document.querySelectorAll('[data-cat]').forEach(el=>{
   el.addEventListener('click', ()=>{ closeWatchlistPage(); closeHistoryPage(); closePlaylistsPage(); closePlaylistDetail(); openCategoryPage(el.dataset.cat); });
 });
-document.getElementById('nav-watchlist').addEventListener('click', ()=> openWatchlistPage('nav-watchlist'));
-document.getElementById('nav-collection').addEventListener('click', ()=> openWatchlistPage('nav-collection'));
-document.getElementById('nav-history').addEventListener('click', ()=> openHistoryPage());
+document.getElementById('nav-watchlist').addEventListener('click', ()=>{ if(requireAuth()) openWatchlistPage('nav-watchlist'); });
+document.getElementById('nav-collection').addEventListener('click', ()=>{ if(requireAuth()) openWatchlistPage('nav-collection'); });
+document.getElementById('nav-history').addEventListener('click', ()=>{ if(requireAuth()) openHistoryPage(); });
 document.querySelector('[data-open-search]')?.addEventListener('click', ()=>{
   closeCategoryPage();
   closeWatchlistPage();
@@ -1182,6 +1187,30 @@ function setAuthMode(mode){
   document.getElementById('auth-toggle-link').addEventListener('click', ()=> setAuthMode(isSignup ? "signin" : "signup"));
 }
 document.getElementById('auth-toggle-link').addEventListener('click', ()=> setAuthMode("signup"));
+
+// Watchlist and History are account-only features. Any UI entry point for
+// them should call requireAuth() first — if nobody's signed in it pops the
+// signup modal and returns false so the caller bails out.
+function requireAuth(){
+  if(auth.currentUser) return true;
+  setAuthMode("signup");
+  document.getElementById('auth-sub').textContent = "Create an account to save your watchlist and keep track of your listening history.";
+  openModal('login-modal');
+  return false;
+}
+
+// Push the in-memory watchlist/history up to the signed-in user's Firestore
+// doc so it follows them across devices. No-op while signed out.
+async function syncUserLists(){
+  const user = auth.currentUser;
+  if(!user) return;
+  try{
+    await db.collection('users').doc(user.uid).set({
+      watchlist: [...likedIds],
+      history: recentlyPlayed
+    }, { merge:true });
+  }catch(err){ console.warn('Failed to sync watchlist/history to your account:', err); }
+}
 
 // Save/merge a user's profile doc in Firestore
 async function saveUserProfile(user, extra = {}){
@@ -1392,10 +1421,27 @@ auth.onAuthStateChanged(async user=>{
       const snap = await db.collection('users').doc(user.uid).get();
       currentProfile = snap.exists ? snap.data() : null;
     }catch(e){ currentProfile = null; }
+    // Watchlist/history live on the account doc now — load whatever this
+    // user already saved (empty arrays for a brand-new account).
+    likedIds = new Set(currentProfile?.watchlist || []);
+    recentlyPlayed = currentProfile?.history || [];
   } else {
     currentProfile = null;
+    // Signed out: these are account-only features, so clear them from
+    // memory rather than falling back to stale local data.
+    likedIds = new Set();
+    recentlyPlayed = [];
+    closeWatchlistPage();
+    closeHistoryPage();
   }
   refreshUserUI(user);
+  updateLikeUI();
+  renderFeatured();
+  renderCategoryRows();
+  renderCategoryPageGrid();
+  renderSuggested();
+  if(watchlistOpen) renderWatchlistPageGrid();
+  if(historyOpen) renderHistoryPageGrid();
 });
 
 let addTab = 'youtube';
@@ -1989,12 +2035,13 @@ document.addEventListener('click', (e)=>{
   if(!btn) return;
   e.stopPropagation();
   e.preventDefault();
+  if(!requireAuth()) return;
   toggleWatchlist(btn.dataset.watchlist);
 }, true);
 
 function toggleWatchlist(id){
   if(likedIds.has(id)) likedIds.delete(id); else likedIds.add(id);
-  localStorage.setItem('anora_liked', JSON.stringify([...likedIds]));
+  syncUserLists();
   updateLikeUI();
   document.querySelectorAll(`[data-watchlist="${id}"]`).forEach(btn=>{
     const on = likedIds.has(id);
@@ -2033,9 +2080,8 @@ async function handleDeleteTrack(id){
     }
 
     likedIds.delete(id);
-    localStorage.setItem('anora_liked', JSON.stringify([...likedIds]));
     recentlyPlayed = recentlyPlayed.filter(x => x !== id);
-    localStorage.setItem('anora_recent', JSON.stringify(recentlyPlayed));
+    syncUserLists();
 
     await loadTracks();
   }catch(err){
@@ -2279,8 +2325,11 @@ function playFromQueue(list, trackId){
 }
 
 function pushRecent(id){
+  // History is account-only — silently skip for guests instead of
+  // interrupting playback with a login prompt.
+  if(!auth.currentUser) return;
   recentlyPlayed = [id, ...recentlyPlayed.filter(x=>x!==id)].slice(0, 10);
-  localStorage.setItem('anora_recent', JSON.stringify(recentlyPlayed));
+  syncUserLists();
   if(historyOpen) renderHistoryPageGrid();
 }
 
@@ -2291,6 +2340,7 @@ function updateLikeUI(){
 }
 
 document.getElementById('like-btn').addEventListener('click', ()=>{
+  if(!requireAuth()) return;
   const t = currentQueue[currentIndex];
   if(!t) return;
   toggleWatchlist(t.id);
